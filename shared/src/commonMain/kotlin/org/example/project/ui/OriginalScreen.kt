@@ -146,9 +146,8 @@ private fun StarChip(
 ) {
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(CornerM))
-            .then(if (isSelected) Modifier.background(GoldPale.copy(alpha = 0.5f)) else Modifier.glass(RoundedCornerShape(CornerM)))
-            .then(if (isSelected) Modifier.border(BorderStroke(1.dp, Gold.copy(alpha = 0.7f)), RoundedCornerShape(CornerM)) else Modifier)
+            .glass(RoundedCornerShape(CornerM))
+            .then(if (isSelected) Modifier.border(BorderStroke(1.5.dp, GoldDeep.copy(alpha = 0.9f)), RoundedCornerShape(CornerM)) else Modifier)
             .clickable(onClick = onClick)
             .padding(horizontal = SpaceM, vertical = SpaceM),
         verticalAlignment = Alignment.CenterVertically,

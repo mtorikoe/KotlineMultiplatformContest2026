@@ -137,10 +137,10 @@ fun StarListItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .glass(RoundedCornerShape(CornerM), strong = isPlaying)
+            .glass(RoundedCornerShape(CornerM))
             .then(
                 if (isPlaying)
-                    Modifier.border(BorderStroke(1.dp, Gold.copy(alpha = 0.6f)), RoundedCornerShape(CornerM))
+                    Modifier.border(BorderStroke(1.5.dp, GoldDeep.copy(alpha = 0.85f)), RoundedCornerShape(CornerM))
                 else Modifier
             )
             .clickable(onClick = onClick)
@@ -198,9 +198,11 @@ private fun FilterChip(
         textAlign = TextAlign.Center,
         modifier = Modifier
             .clip(RoundedCornerShape(CornerS))
-            .then(if (isSelected) Modifier.background(GoldPale.copy(alpha = 0.5f)) else Modifier)
             .border(
-                BorderStroke(1.dp, if (isSelected) Gold.copy(alpha = 0.6f) else GlassBorder),
+                BorderStroke(
+                    if (isSelected) 1.5.dp else 1.dp,
+                    if (isSelected) GoldDeep.copy(alpha = 0.9f) else GlassBorder
+                ),
                 RoundedCornerShape(CornerS)
             )
             .clickable(onClick = onClick)
@@ -242,16 +244,19 @@ fun FlatButton(
     Text(
         text = label.uppercase(),
         style = LabelStyle.copy(
-            color = GoldDeep,
+            color = if (emphasised) GoldDeep else InkFaint,
             fontWeight = FontWeight.Bold,
             fontSize = DataStyle.fontSize,
             letterSpacing = DataStyle.letterSpacing
         ),
         textAlign = TextAlign.Center,
         modifier = modifier
-            .clip(RoundedCornerShape(CornerM))
-            .then(if (emphasised) Modifier.background(GoldPale.copy(alpha = 0.55f)) else Modifier.glass(RoundedCornerShape(CornerM)))
-            .border(BorderStroke(1.dp, Gold.copy(alpha = 0.7f)), RoundedCornerShape(CornerM))
+            .glass(RoundedCornerShape(CornerM))
+            .then(
+                if (emphasised)
+                    Modifier.border(BorderStroke(1.5.dp, GoldDeep.copy(alpha = 0.85f)), RoundedCornerShape(CornerM))
+                else Modifier
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = SpaceXxl, vertical = SpaceM)
     )
