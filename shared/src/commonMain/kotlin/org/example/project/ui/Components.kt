@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -256,11 +257,11 @@ fun FlatButton(
     )
 }
 
-// ─── Bottom navigation (glass bar, 3 tabs) ─────────────────────
+// ─── Bottom navigation (glass bar, Heroicons) ──────────────────
 
 @Composable
 fun BottomNav(
-    tabs: List<String>,
+    items: List<NavItem>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -273,27 +274,28 @@ fun BottomNav(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        tabs.forEachIndexed { i, label ->
+        items.forEachIndexed { i, item ->
             val active = i == selectedIndex
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .clip(RoundedCornerShape(CornerS))
                     .clickable { onSelect(i) }
-                    .padding(horizontal = SpaceL, vertical = SpaceS)
+                    .padding(horizontal = SpaceL, vertical = SpaceXs)
             ) {
+                Icon(
+                    imageVector = if (active) item.filled else item.outline,
+                    contentDescription = item.label,
+                    tint = if (active) Ink else InkFaint,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.height(SpaceXs))
                 Text(
-                    label.uppercase(),
+                    item.label.uppercase(),
                     style = LabelStyle.copy(
                         color = if (active) Ink else InkFaint,
                         fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
                     )
-                )
-                Spacer(Modifier.height(SpaceXs))
-                Box(
-                    Modifier
-                        .size(width = if (active) 18.dp else 0.dp, height = 2.dp)
-                        .background(Gold, RoundedCornerShape(1.dp))
                 )
             }
         }

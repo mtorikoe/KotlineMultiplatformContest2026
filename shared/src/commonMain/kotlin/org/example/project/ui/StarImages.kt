@@ -20,6 +20,7 @@ import kotlinproject.shared.generated.resources.star_procyon
 import kotlinproject.shared.generated.resources.star_polaris
 import kotlinproject.shared.generated.resources.star_aldebaran
 import kotlinproject.shared.generated.resources.star_antares
+import kotlinproject.shared.generated.resources.star_arcturus
 
 /**
  * The real image of each individual star, where a genuine photo exists.
@@ -50,7 +51,8 @@ fun imageFor(star: Star): DrawableResource = when (star.id) {
     "polaris"    -> Res.drawable.star_polaris
     "aldebaran"  -> Res.drawable.star_aldebaran
     "antares"    -> Res.drawable.star_antares
-    // Capella, Pollux, Arcturus, Altair — no clean real photo yet; colour-matched fallback below.
+    "arcturus"   -> Res.drawable.star_arcturus
+    // Capella, Pollux, Altair — no clean real photo yet; colour-matched fallback below.
     else -> when (star.spectralClass) {
         SpectralClass.O, SpectralClass.B -> Res.drawable.star_blue
         SpectralClass.A, SpectralClass.F -> Res.drawable.star_white

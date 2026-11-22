@@ -8,8 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.example.project.model.Star
 import org.example.project.model.StarCatalog
 import org.example.project.platform.PlatformAudio
@@ -18,7 +22,9 @@ import org.example.project.sonification.SonificationEngine
 import org.example.project.sonification.StarSound
 import org.example.project.sonification.WaveformRenderer
 
-enum class Tab { HOME, CATALOG, ACCOUNT }
+enum class Tab { HOME, CATALOG, ORIGINAL }
+
+private const val SAMPLE_RATE = 44100
 
 @Composable
 fun StellarSynthApp(audio: PlatformAudio = NoAudio) {
@@ -28,23 +34,52 @@ fun StellarSynthApp(audio: PlatformAudio = NoAudio) {
     var isPlaying by remember { mutableStateOf(false) }
     var aiInterpretation by remember { mutableStateOf("") }
     var playingStarId by remember { mutableStateOf<String?>(null) }
+    var combinedPlaying by remember { mutableStateOf(false) }
     var starsHeard by remember { mutableStateOf(0) }
 
     val today = remember { StarCatalog.findById("betelgeuse") ?: StarCatalog.stars.first() }
 
+    val scope = rememberCoroutineScope()
+    var revertJob by remember { mutableStateOf<Job?>(null) }
+
+    // When playback naturally ends, flip controls back to their resting state.
+    fun scheduleRevert(sampleCount: Int, onDone: () -> Unit) {
+        revertJob?.cancel()
+        revertJob = scope.launch {
+            delay(sampleCount.toLong() * 1000 / SAMPLE_RATE + 150)
+            onDone()
+        }
+    }
+
+    fun stopPlaying() {
+        revertJob?.cancel()
+        audio.stop()
+        isPlaying = false
+        playingStarId = null
+        combinedPlaying = false
+    }
+
     fun playStar(star: Star) {
+        stopPlaying()
         val sound = SonificationEngine.parameterize(star)
-        audio.playSamples(WaveformRenderer.render(sound), 44100)
+        val samples = WaveformRenderer.render(sound)
+        audio.playSamples(samples, SAMPLE_RATE)
         isPlaying = true
         playingStarId = star.id
         aiInterpretation = generateLocalInterpretation(star, sound)
         starsHeard += 1
+        scheduleRevert(samples.size) { isPlaying = false; playingStarId = null }
     }
 
-    fun stopPlaying() {
-        audio.stop()
-        isPlaying = false
-        playingStarId = null
+    fun playCombined(stars: List<Star>) {
+        if (stars.isEmpty()) return
+        stopPlaying()
+        val sounds = stars.map { SonificationEngine.parameterize(it) }
+        val samples = WaveformRenderer.renderChord(sounds)
+        audio.playSamples(samples, SAMPLE_RATE)
+        combinedPlaying = true
+        starsHeard += stars.size
+        scheduleRevert(samples.size) { combinedPlaying = false }
     }
 
     ProvideAppFonts {
@@ -62,11 +97,20 @@ fun StellarSynthApp(audio: PlatformAudio = NoAudio) {
                             playingStarId = playingStarId,
                             onOpen = { openStar = it }
                         )
-                        Tab.ACCOUNT -> AccountScreen(starsHeard = starsHeard)
+                        Tab.ORIGINAL -> OriginalScreen(
+                            stars = StarCatalog.stars,
+                            combinedPlaying = combinedPlaying,
+                            onPlayCombined = { playCombined(it) },
+                            onStop = { stopPlaying() }
+                        )
                     }
                 }
                 BottomNav(
-                    tabs = listOf("Home", "Catalog", "Account"),
+                    items = listOf(
+                        NavItem("Home", IconHomeOutline, IconHomeFilled),
+                        NavItem("Catalog", IconCatalogOutline, IconCatalogFilled),
+                        NavItem("Original", IconOriginalOutline, IconOriginalFilled),
+                    ),
                     selectedIndex = tab.ordinal,
                     onSelect = { tab = Tab.entries[it] }
                 )
