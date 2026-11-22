@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -136,10 +137,10 @@ fun StarListItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .glass(RoundedCornerShape(CornerM), strong = isPlaying)
+            .glass(RoundedCornerShape(CornerM))
             .then(
                 if (isPlaying)
-                    Modifier.border(BorderStroke(1.dp, Gold.copy(alpha = 0.6f)), RoundedCornerShape(CornerM))
+                    Modifier.border(BorderStroke(1.5.dp, GoldDeep.copy(alpha = 0.85f)), RoundedCornerShape(CornerM))
                 else Modifier
             )
             .clickable(onClick = onClick)
@@ -197,9 +198,11 @@ private fun FilterChip(
         textAlign = TextAlign.Center,
         modifier = Modifier
             .clip(RoundedCornerShape(CornerS))
-            .then(if (isSelected) Modifier.background(GoldPale.copy(alpha = 0.5f)) else Modifier)
             .border(
-                BorderStroke(1.dp, if (isSelected) Gold.copy(alpha = 0.6f) else GlassBorder),
+                BorderStroke(
+                    if (isSelected) 1.5.dp else 1.dp,
+                    if (isSelected) GoldDeep.copy(alpha = 0.9f) else GlassBorder
+                ),
                 RoundedCornerShape(CornerS)
             )
             .clickable(onClick = onClick)
@@ -241,26 +244,29 @@ fun FlatButton(
     Text(
         text = label.uppercase(),
         style = LabelStyle.copy(
-            color = GoldDeep,
+            color = if (emphasised) GoldDeep else InkFaint,
             fontWeight = FontWeight.Bold,
             fontSize = DataStyle.fontSize,
             letterSpacing = DataStyle.letterSpacing
         ),
         textAlign = TextAlign.Center,
         modifier = modifier
-            .clip(RoundedCornerShape(CornerM))
-            .then(if (emphasised) Modifier.background(GoldPale.copy(alpha = 0.55f)) else Modifier.glass(RoundedCornerShape(CornerM)))
-            .border(BorderStroke(1.dp, Gold.copy(alpha = 0.7f)), RoundedCornerShape(CornerM))
+            .glass(RoundedCornerShape(CornerM))
+            .then(
+                if (emphasised)
+                    Modifier.border(BorderStroke(1.5.dp, GoldDeep.copy(alpha = 0.85f)), RoundedCornerShape(CornerM))
+                else Modifier
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = SpaceXxl, vertical = SpaceM)
     )
 }
 
-// ─── Bottom navigation (glass bar, 3 tabs) ─────────────────────
+// ─── Bottom navigation (glass bar, Heroicons) ──────────────────
 
 @Composable
 fun BottomNav(
-    tabs: List<String>,
+    items: List<NavItem>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -273,27 +279,28 @@ fun BottomNav(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        tabs.forEachIndexed { i, label ->
+        items.forEachIndexed { i, item ->
             val active = i == selectedIndex
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .clip(RoundedCornerShape(CornerS))
                     .clickable { onSelect(i) }
-                    .padding(horizontal = SpaceL, vertical = SpaceS)
+                    .padding(horizontal = SpaceL, vertical = SpaceXs)
             ) {
+                Icon(
+                    imageVector = if (active) item.filled else item.outline,
+                    contentDescription = item.label,
+                    tint = if (active) Ink else InkFaint,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.height(SpaceXs))
                 Text(
-                    label.uppercase(),
+                    item.label.uppercase(),
                     style = LabelStyle.copy(
                         color = if (active) Ink else InkFaint,
                         fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
                     )
-                )
-                Spacer(Modifier.height(SpaceXs))
-                Box(
-                    Modifier
-                        .size(width = if (active) 18.dp else 0.dp, height = 2.dp)
-                        .background(Gold, RoundedCornerShape(1.dp))
                 )
             }
         }

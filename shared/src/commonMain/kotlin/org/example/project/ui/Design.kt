@@ -1,13 +1,24 @@
 package org.example.project.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -65,17 +76,70 @@ val GlassHi     get() = SpaceTheme.GLASS_HI.toColor()
 
 // ─── Surfaces ──────────────────────────────────────────────────
 
-/** Page background: a near-flat warm-white with a barely-there foot. */
+/** Static fallback of the sky gradient (black → navy → azure → deep). */
 val PageBrush: Brush
-    get() = Brush.verticalGradient(0f to Base, 1f to BaseDim)
+    get() = Brush.verticalGradient(
+        0f    to SpaceTheme.BG_BLACK.toColor(),
+        0.4f  to SpaceTheme.BG_NAVY.toColor(),
+        0.74f to SpaceTheme.BG_AZURE.toColor(),
+        1f    to SpaceTheme.BG_DEEP.toColor(),
+    )
 
 /** The star-field monitor background. */
 val FieldBrush: Brush
     get() = Brush.verticalGradient(listOf(FieldTop, Field))
 
 /**
- * Frosted glass: translucent white, a soft top highlight, a hairline edge.
- * No solid card colour — the surface borrows what's behind it.
+ * The living page backdrop: a vertical black→navy→azure→deep gradient whose
+ * mid stops drift, with a slow white bloom and an azure bloom wandering across
+ * it. Draw this behind page content.
+ */
+@Composable
+fun StellarBackground(modifier: Modifier = Modifier) {
+    val tr = rememberInfiniteTransition(label = "sky")
+    val drift by tr.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(18000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "drift"
+    )
+    val bloom by tr.animateFloat(
+        0f, 1f, infiniteRepeatable(tween(14000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "bloom"
+    )
+    val black = SpaceTheme.BG_BLACK.toColor()
+    val navy  = SpaceTheme.BG_NAVY.toColor()
+    val azure = SpaceTheme.BG_AZURE.toColor()
+    val deep  = SpaceTheme.BG_DEEP.toColor()
+
+    Canvas(modifier.fillMaxSize()) {
+        val d = (drift - 0.5f) * 0.12f
+        drawRect(
+            Brush.verticalGradient(
+                0f to black,
+                (0.38f + d) to navy,
+                (0.72f + d) to azure,
+                1f to deep,
+            )
+        )
+        // Drifting white bloom — the moving "white" highlight.
+        val c1 = Offset(size.width * (0.22f + 0.52f * bloom), size.height * (0.20f + 0.12f * drift))
+        val r1 = size.minDimension * 0.8f
+        drawCircle(
+            Brush.radialGradient(listOf(Color.White.copy(alpha = 0.15f), Color.Transparent), center = c1, radius = r1),
+            radius = r1, center = c1
+        )
+        // Wandering azure bloom for depth.
+        val c2 = Offset(size.width * (0.82f - 0.44f * bloom), size.height * (0.56f + 0.10f * drift))
+        val r2 = size.minDimension * 0.72f
+        drawCircle(
+            Brush.radialGradient(listOf(azure.copy(alpha = 0.45f), Color.Transparent), center = c2, radius = r2),
+            radius = r2, center = c2
+        )
+    }
+}
+
+/**
+ * Liquid glass: a translucent pane lit from the top, with a bright sheen,
+ * a soft mid-body and a fine luminous edge — it borrows the sky behind it.
  */
 fun Modifier.glass(
     shape: Shape = RoundedCornerShape(CornerM),
@@ -84,7 +148,9 @@ fun Modifier.glass(
     .clip(shape)
     .background(
         Brush.verticalGradient(
-            listOf(GlassHi, if (strong) GlassStrong else GlassFill)
+            0f   to GlassHi,
+            0.5f to (if (strong) GlassStrong else GlassFill),
+            1f   to (if (strong) GlassFill else GlassFill.copy(alpha = GlassFill.alpha * 0.6f)),
         )
     )
     .border(BorderStroke(1.dp, GlassBorder), shape)

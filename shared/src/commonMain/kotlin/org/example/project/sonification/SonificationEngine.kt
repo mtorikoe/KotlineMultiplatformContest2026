@@ -45,9 +45,11 @@ data class Harmonic(
 
 object SonificationEngine {
 
-    // Musical range: C2 (65 Hz) to C7 (2093 Hz)
-    private const val MIDI_LOW  = 36   // C2
-    private const val MIDI_HIGH = 96   // C7
+    // Musical range: G3 (~196 Hz) to F#6 (~1480 Hz).
+    // The floor is kept above the roll-off of phone/laptop speakers so even the
+    // coolest stars are clearly audible; the ceiling tames the piercing top end.
+    private const val MIDI_LOW  = 55   // G3  (~196 Hz)
+    private const val MIDI_HIGH = 90   // F#6 (~1480 Hz)
     private const val TEMP_LOW  = 2400.0
     private const val TEMP_HIGH = 50000.0
 
