@@ -2,6 +2,7 @@ package org.example.project.ui
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,119 +17,114 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.example.project.model.SpectralClass
 import org.example.project.model.Star
+import org.jetbrains.compose.resources.painterResource
 
-// ─── Star glow dot ─────────────────────────────────────────────
+// ─── Circular star photo with a coloured halo ──────────────────
 
-/**
- * A circular dot coloured by the star's spectral class,
- * with a soft radial glow behind it.
- */
 @Composable
-fun StarDot(
+fun StarImageCircle(
     star: Star,
-    size: Dp = 32.dp,
-    isPlaying: Boolean = false,
-    modifier: Modifier = Modifier
+    size: Dp,
+    modifier: Modifier = Modifier,
 ) {
-    val starColor = star.spectralClass.starColor.toColor()
-    val glowAlpha by if (isPlaying) {
-        val inf = rememberInfiniteTransition()
-        inf.animateFloat(
-            initialValue = 0.3f,
-            targetValue = 0.7f,
-            animationSpec = infiniteRepeatable(
-                tween(800, easing = FastOutSlowInEasing),
-                RepeatMode.Reverse
-            )
-        )
-    } else {
-        remember { mutableStateOf(0.4f) }
-    }
-
+    val halo = star.spectralClass.starColor.toColor()
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // Outer glow
         Box(
             Modifier
                 .fillMaxSize()
                 .drawBehind {
                     drawCircle(
                         brush = Brush.radialGradient(
-                            colors = listOf(
-                                starColor.copy(alpha = glowAlpha),
-                                Color.Transparent
-                            )
+                            listOf(halo.copy(alpha = 0.55f), Color.Transparent)
+                        ),
+                        radius = this.size.minDimension / 2f
+                    )
+                }
+        )
+        Image(
+            painter = painterResource(imageFor(star)),
+            contentDescription = star.name,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(size * 0.78f)
+                .clip(CircleShape)
+                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)), CircleShape)
+        )
+    }
+}
+
+// ─── Simple glow dot (list rows, small marks) ──────────────────
+
+@Composable
+fun StarDot(
+    star: Star,
+    size: Dp = 32.dp,
+    modifier: Modifier = Modifier
+) {
+    val starColor = star.spectralClass.starColor.toColor()
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(starColor.copy(alpha = 0.55f), Color.Transparent)
                         )
                     )
                 }
         )
-        // Core dot — a white-hot centre fading to the star's colour
         Box(
             Modifier
-                .size(size * 0.45f)
+                .size(size * 0.42f)
                 .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(Color.White, starColor)
-                    )
-                )
+                .background(Brush.radialGradient(listOf(Color.White, starColor)))
         )
     }
 }
 
-// ─── Featured "star of the night" hero ─────────────────────────
+// ─── Today's Star hero (glass, with the real photo) ────────────
 
-/**
- * A large, editorial hero card that differs structurally from the
- * compact list rows below it — a deliberate change of visual pacing.
- */
 @Composable
-fun FeaturedStar(
+fun TodayStar(
     star: Star,
-    onClick: () -> Unit,
+    onOpen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val starColor = star.spectralClass.starColor.toColor()
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(CornerL))
-            .background(accentWash(starColor))
-            .border(BorderStroke(1.dp, Hairline), RoundedCornerShape(CornerL))
-            .clickable(onClick = onClick)
+            .glass(RoundedCornerShape(CornerL))
+            .clickable(onClick = onOpen)
             .padding(SpaceL),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(SpaceL)
     ) {
-        StarDot(star, size = 84.dp)
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text("STAR OF THE NIGHT", style = LabelStyle.copy(color = Copper))
-            Spacer(Modifier.height(SpaceS))
-            Text(star.name, style = TitleStyle.copy(fontSize = TitleStyle.fontSize * 0.72f))
+        StarImageCircle(star, size = 76.dp)
+        Column(Modifier.weight(1f)) {
+            Text("TONIGHT'S STAR", style = LabelStyle.copy(color = GoldDeep))
             Spacer(Modifier.height(SpaceXs))
-            Text(
-                "${star.spectralType}  ·  ${star.constellation}",
-                style = CaptionStyle
-            )
-            Spacer(Modifier.height(SpaceS))
-            Text(
-                star.description,
-                style = BodyStyle.copy(color = Dust, fontSize = CaptionStyle.fontSize)
-            )
+            Text(star.name, style = TitleStyle.copy(fontSize = TitleStyle.fontSize * 0.66f))
+            Spacer(Modifier.height(SpaceXs))
+            Text("${star.spectralType}  ·  ${star.constellation}", style = CaptionStyle)
         }
     }
 }
 
-// ─── Star list item ────────────────────────────────────────────
+// ─── Star list row (glass) ─────────────────────────────────────
 
 @Composable
 fun StarListItem(
@@ -137,36 +133,29 @@ fun StarListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val starColor = star.spectralClass.starColor.toColor()
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(CornerM))
-            .background(if (isPlaying) accentWash(starColor) else CardBrush)
-            .border(
-                BorderStroke(1.dp, if (isPlaying) HairlineStrong else Hairline),
-                RoundedCornerShape(CornerM)
+            .glass(RoundedCornerShape(CornerM), strong = isPlaying)
+            .then(
+                if (isPlaying)
+                    Modifier.border(BorderStroke(1.dp, Gold.copy(alpha = 0.6f)), RoundedCornerShape(CornerM))
+                else Modifier
             )
             .clickable(onClick = onClick)
             .padding(SpaceM),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(SpaceM)
     ) {
-        StarDot(star, size = 40.dp, isPlaying = isPlaying)
-
-        Column(modifier = Modifier.weight(1f)) {
+        StarDot(star, size = 38.dp)
+        Column(Modifier.weight(1f)) {
             Text(star.name, style = HeadingStyle)
             Spacer(Modifier.height(SpaceXs))
-            Text(
-                "${star.spectralType}  ·  ${star.constellation}",
-                style = CaptionStyle
-            )
+            Text("${star.spectralType}  ·  ${star.constellation}", style = CaptionStyle)
         }
-
-        // Temperature badge — monospace, like an instrument readout
         Text(
             "${star.temperatureK} K",
-            style = DataStyle.copy(color = Amber, fontSize = CaptionStyle.fontSize)
+            style = DataStyle.copy(color = GoldDeep, fontSize = CaptionStyle.fontSize)
         )
     }
 }
@@ -183,19 +172,11 @@ fun SpectralFilter(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(SpaceS)
     ) {
-        // "All" chip
-        FilterChip(
-            label = "All",
-            isSelected = selected == null,
-            onClick = { onSelect(null) }
-        )
+        FilterChip("All", selected == null) { onSelect(null) }
         SpectralClass.entries.forEach { sc ->
-            FilterChip(
-                label = sc.label,
-                isSelected = selected == sc,
-                chipColor = sc.starColor.toColor(),
-                onClick = { onSelect(if (selected == sc) null else sc) }
-            )
+            FilterChip(sc.label, selected == sc) {
+                onSelect(if (selected == sc) null else sc)
+            }
         }
     }
 }
@@ -204,21 +185,21 @@ fun SpectralFilter(
 private fun FilterChip(
     label: String,
     isSelected: Boolean,
-    chipColor: Color = Amber,
     onClick: () -> Unit
 ) {
     Text(
         text = label,
         style = LabelStyle.copy(
-            color = if (isSelected) chipColor else Dust,
+            color = if (isSelected) GoldDeep else InkFaint,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             letterSpacing = DataStyle.letterSpacing
         ),
         textAlign = TextAlign.Center,
         modifier = Modifier
             .clip(RoundedCornerShape(CornerS))
-            .background(if (isSelected) CardBrush else SolidColor(Color.Transparent))
+            .then(if (isSelected) Modifier.background(GoldPale.copy(alpha = 0.5f)) else Modifier)
             .border(
-                BorderStroke(1.dp, if (isSelected) chipColor.copy(alpha = 0.5f) else Hairline),
+                BorderStroke(1.dp, if (isSelected) Gold.copy(alpha = 0.6f) else GlassBorder),
                 RoundedCornerShape(CornerS)
             )
             .clickable(onClick = onClick)
@@ -226,7 +207,7 @@ private fun FilterChip(
     )
 }
 
-// ─── Section header ────────────────────────────────────────────
+// ─── Section header (mono caps + trailing rule) ────────────────
 
 @Composable
 fun SectionHeader(
@@ -236,58 +217,49 @@ fun SectionHeader(
     Row(
         modifier = modifier.padding(bottom = SpaceS),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(SpaceS)
+        horizontalArrangement = Arrangement.spacedBy(SpaceM)
     ) {
-        Text(
-            text = text.uppercase(),
-            style = LabelStyle.copy(color = Copper)
-        )
-        // A thin rule that trails off — adds structure without a boxy divider
+        Text(text.uppercase(), style = LabelStyle.copy(color = InkSoft))
         Box(
             Modifier
                 .weight(1f)
                 .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(listOf(Hairline, Color.Transparent))
-                )
+                .background(Brush.horizontalGradient(listOf(GlassBorder, Color.Transparent)))
         )
     }
 }
 
-// ─── Flat text button ──────────────────────────────────────────
+// ─── Pill button (glass + gold edge) ───────────────────────────
 
 @Composable
 fun FlatButton(
     label: String,
-    color: Color = Amber,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    emphasised: Boolean = true,
 ) {
     Text(
         text = label.uppercase(),
         style = LabelStyle.copy(
-            color = color,
+            color = GoldDeep,
+            fontWeight = FontWeight.Bold,
             fontSize = DataStyle.fontSize,
             letterSpacing = DataStyle.letterSpacing
         ),
         textAlign = TextAlign.Center,
         modifier = modifier
             .clip(RoundedCornerShape(CornerM))
-            .background(
-                Brush.verticalGradient(
-                    listOf(color.copy(alpha = 0.22f), color.copy(alpha = 0.08f))
-                )
-            )
-            .border(BorderStroke(1.dp, color.copy(alpha = 0.45f)), RoundedCornerShape(CornerM))
+            .then(if (emphasised) Modifier.background(GoldPale.copy(alpha = 0.55f)) else Modifier.glass(RoundedCornerShape(CornerM)))
+            .border(BorderStroke(1.dp, Gold.copy(alpha = 0.7f)), RoundedCornerShape(CornerM))
             .clickable(onClick = onClick)
             .padding(horizontal = SpaceXxl, vertical = SpaceM)
     )
 }
 
-// ─── Bottom navigation ────────────────────────────────────────
+// ─── Bottom navigation (glass bar, 3 tabs) ─────────────────────
 
 @Composable
-fun BottomBar(
+fun BottomNav(
     tabs: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
@@ -296,22 +268,34 @@ fun BottomBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(CardBrush)
-            .border(BorderStroke(1.dp, Hairline))
-            .padding(vertical = SpaceM),
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .glass(RoundedCornerShape(topStart = CornerL, topEnd = CornerL), strong = true)
+            .padding(top = SpaceS, bottom = SpaceM),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         tabs.forEachIndexed { i, label ->
-            Text(
-                text = label,
-                style = CaptionStyle.copy(
-                    color = if (i == selectedIndex) Amber else Dust
-                ),
-                textAlign = TextAlign.Center,
+            val active = i == selectedIndex
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
+                    .clip(RoundedCornerShape(CornerS))
                     .clickable { onSelect(i) }
-                    .padding(horizontal = SpaceM, vertical = SpaceXs)
-            )
+                    .padding(horizontal = SpaceL, vertical = SpaceS)
+            ) {
+                Text(
+                    label.uppercase(),
+                    style = LabelStyle.copy(
+                        color = if (active) Ink else InkFaint,
+                        fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
+                    )
+                )
+                Spacer(Modifier.height(SpaceXs))
+                Box(
+                    Modifier
+                        .size(width = if (active) 18.dp else 0.dp, height = 2.dp)
+                        .background(Gold, RoundedCornerShape(1.dp))
+                )
+            }
         }
     }
 }

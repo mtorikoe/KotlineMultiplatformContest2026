@@ -1,10 +1,17 @@
 package org.example.project.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -20,7 +27,7 @@ import kotlinproject.shared.generated.resources.spectral_semibold
 import kotlinproject.shared.generated.resources.spacemono_regular
 import kotlinproject.shared.generated.resources.spacemono_bold
 
-// ─── Spacing constants as dp ───────────────────────────────────
+// ─── Spacing ───────────────────────────────────────────────────
 
 val SpaceXs  = SpaceTheme.SPACE_XS.dp
 val SpaceS   = SpaceTheme.SPACE_S.dp
@@ -35,55 +42,54 @@ val CornerL = SpaceTheme.CORNER_L.dp
 
 val MaxContentWidth = SpaceTheme.MAX_CONTENT_WIDTH.dp
 
-// ─── Color helpers ─────────────────────────────────────────────
+// ─── Colours ───────────────────────────────────────────────────
 
 fun Long.toColor(): Color = Color(this.toInt())
 
-val DeepSky     get() = SpaceTheme.DEEP_SKY.toColor()
-val Surface     get() = SpaceTheme.SURFACE.toColor()
-val SurfaceHigh get() = SpaceTheme.SURFACE_HIGH.toColor()
-val Starlight   get() = SpaceTheme.STARLIGHT.toColor()
-val Dust        get() = SpaceTheme.DUST.toColor()
-val Faint       get() = SpaceTheme.FAINT.toColor()
-val Amber       get() = SpaceTheme.AMBER.toColor()
-val Copper      get() = SpaceTheme.COPPER.toColor()
-val Nebula      get() = SpaceTheme.NEBULA.toColor()
-val Active      get() = SpaceTheme.ACTIVE.toColor()
+val Base      get() = SpaceTheme.BASE.toColor()
+val BaseDim   get() = SpaceTheme.BASE_DIM.toColor()
+val Ink       get() = SpaceTheme.INK.toColor()
+val InkSoft   get() = SpaceTheme.INK_SOFT.toColor()
+val InkFaint  get() = SpaceTheme.INK_FAINT.toColor()
+val Gold      get() = SpaceTheme.GOLD.toColor()
+val GoldPale  get() = SpaceTheme.GOLD_PALE.toColor()
+val GoldDeep  get() = SpaceTheme.GOLD_DEEP.toColor()
+val Field     get() = SpaceTheme.FIELD.toColor()
+val FieldTop  get() = SpaceTheme.FIELD_TOP.toColor()
+val StarWhite get() = SpaceTheme.STAR_WHITE.toColor()
 
-val Hairline       get() = SpaceTheme.HAIRLINE.toColor()
-val HairlineStrong get() = SpaceTheme.HAIRLINE_STRONG.toColor()
+val GlassFill   get() = SpaceTheme.GLASS.toColor()
+val GlassStrong get() = SpaceTheme.GLASS_STRONG.toColor()
+val GlassBorder get() = SpaceTheme.GLASS_BORDER.toColor()
+val GlassHi     get() = SpaceTheme.GLASS_HI.toColor()
 
-// ─── Depth: layered gradient brushes ───────────────────────────
-// One dominant surface tone, lit from the top, sinking into warm
-// black — never a flat solid fill, never a purple→blue wash.
+// ─── Surfaces ──────────────────────────────────────────────────
 
-/** Full-screen night-sky backdrop: a vertical warm-plum → black gradient. */
-val SkyBrush: Brush
-    get() = Brush.verticalGradient(
-        0f   to SpaceTheme.SKY_TOP.toColor(),
-        0.45f to DeepSky,
-        1f   to SpaceTheme.SKY_BOTTOM.toColor()
+/** Page background: a near-flat warm-white with a barely-there foot. */
+val PageBrush: Brush
+    get() = Brush.verticalGradient(0f to Base, 1f to BaseDim)
+
+/** The star-field monitor background. */
+val FieldBrush: Brush
+    get() = Brush.verticalGradient(listOf(FieldTop, Field))
+
+/**
+ * Frosted glass: translucent white, a soft top highlight, a hairline edge.
+ * No solid card colour — the surface borrows what's behind it.
+ */
+fun Modifier.glass(
+    shape: Shape = RoundedCornerShape(CornerM),
+    strong: Boolean = false,
+): Modifier = this
+    .clip(shape)
+    .background(
+        Brush.verticalGradient(
+            listOf(GlassHi, if (strong) GlassStrong else GlassFill)
+        )
     )
-
-/** Top-lit card surface — subtle highlight at the top edge. */
-val CardBrush: Brush
-    get() = Brush.verticalGradient(
-        listOf(SpaceTheme.CARD_TOP.toColor(), SpaceTheme.CARD_BOTTOM.toColor())
-    )
-
-/** A soft wash tinted by an accent/star colour, for hero panels. */
-fun accentWash(accent: Color): Brush = Brush.verticalGradient(
-    listOf(
-        accent.copy(alpha = 0.14f),
-        SpaceTheme.CARD_BOTTOM.toColor()
-    )
-)
+    .border(BorderStroke(1.dp, GlassBorder), shape)
 
 // ─── Fonts ─────────────────────────────────────────────────────
-// Distinctive, brand-fitting families — no system defaults.
-//   • DM Serif Display → editorial, high-contrast headline serif (celestial)
-//   • Spectral         → warm literary body serif (cozy, readable)
-//   • Space Mono       → instrument-readout monospace for data & labels
 
 class AppFonts(
     val display: FontFamily,
@@ -112,59 +118,53 @@ fun ProvideAppFonts(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalAppFonts provides fonts, content = content)
 }
 
-// ─── Typography (composable getters bind the provided families) ─
+// ─── Typography (ink on white; emphasis by weight, not colour) ─
 
 val TitleStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.display,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.TITLE_SIZE.sp,
         letterSpacing = SpaceTheme.TITLE_TRACKING.sp,
-        color = Starlight
+        color = Ink
     )
 
 val HeadingStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.display,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.HEADING_SIZE.sp,
         letterSpacing = SpaceTheme.HEADING_TRACKING.sp,
-        color = Starlight
+        color = Ink
     )
 
 val BodyStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.body,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.BODY_SIZE.sp,
         lineHeight = (SpaceTheme.BODY_SIZE * 1.5).sp,
-        color = Starlight
+        color = Ink
     )
 
 val CaptionStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.body,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.CAPTION_SIZE.sp,
-        color = Dust
+        color = InkSoft
     )
 
-/** Space Mono, uppercase, wide tracking — for section labels. */
+/** Space Mono, caps, wide tracking — section labels. */
 val LabelStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.mono,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.LABEL_SIZE.sp,
         letterSpacing = SpaceTheme.LABEL_TRACKING.sp,
-        color = Dust
+        color = InkSoft
     )
 
-/** Space Mono — numeric data values and badges (Hz, K, L☉). */
+/** Space Mono — numeric data & badges. */
 val DataStyle: TextStyle
     @Composable get() = TextStyle(
         fontFamily = LocalAppFonts.current.mono,
-        fontWeight = FontWeight.Normal,
         fontSize = SpaceTheme.DATA_SIZE.sp,
         letterSpacing = SpaceTheme.DATA_TRACKING.sp,
-        color = Starlight
+        color = Ink
     )
