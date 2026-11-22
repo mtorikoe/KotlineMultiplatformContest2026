@@ -83,7 +83,8 @@ fun StellarSynthApp(audio: PlatformAudio = NoAudio) {
     }
 
     ProvideAppFonts {
-        Box(Modifier.fillMaxSize().background(PageBrush)) {
+        Box(Modifier.fillMaxSize()) {
+            StellarBackground()
 
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxSize().weight(1f)) {
@@ -118,7 +119,8 @@ fun StellarSynthApp(audio: PlatformAudio = NoAudio) {
 
             // Detail / player pushed over the tabs
             openStar?.let { star ->
-                Box(Modifier.fillMaxSize().background(PageBrush)) {
+                Box(Modifier.fillMaxSize()) {
+                    StellarBackground()
                     PlayerScreen(
                         star = star,
                         isPlaying = isPlaying && playingStarId == star.id,
