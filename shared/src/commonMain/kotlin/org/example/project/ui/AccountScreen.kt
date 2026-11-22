@@ -64,8 +64,8 @@ fun AccountScreen(
 
         SectionHeader("Credits")
         CreditLine("Type", "DM Serif Display · Spectral · Space Mono (SIL OFL)")
-        CreditLine("Imagery", "The Sun, Sirius, Mira — NASA / ESA, public domain")
-        CreditLine("", "Rigel — Wikimedia Commons · Betelgeuse — ESO/ALMA (CC BY 4.0)")
+        CreditLine("Imagery", "Each star's own photo — NASA/ESA, ESO, the Digitized Sky Survey & Wikimedia Commons")
+        CreditLine("", "public domain / CC BY — credited on each file's Commons page")
         CreditLine("Data", "SIMBAD & standard astrophysical references")
 
         Spacer(Modifier.height(SpaceXxl))
